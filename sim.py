@@ -1,6 +1,7 @@
 from heapq import heappop, heappush
 import copy
 import math
+import matplotlib.pyplot as plt
 
 #########################################################################################
 
@@ -68,7 +69,7 @@ class Car(object):
     self._speed = speed
 
   def _calculate_route(self):
-    route = self._sg.shortest_path(self.source, self.destination)
+    route = self._sg.shortest_path(self._source, self._destination)
     route.pop(0)
     self._route = route
     self._update_next_dest()
@@ -77,6 +78,7 @@ class Car(object):
     self._next_dest = self._route.pop(0)
 
   def drive(self):
+    return null
     
 #########################################################################################
 
@@ -201,4 +203,43 @@ g.add_node(1, 1, 'C')
 g.add_edge('A', 'B', 1)
 g.add_edge('B', 'C', 1)
 print(g.shortest_path('A', 'C'))
+
+"""Vehicle Simulations"""
+#car1 = Car((0,0),(5,5),'car1',g,3)
+
+GRAPHSIZE = 10
+ticks = range(0, GRAPHSIZE + 1)
+x = [1,6,8,1,0,3,6,3,5]
+y = [1,3,5,6,2,7,0,3,1]
+plt.hold(True)
+
+
+def checkEuc(i, xlist, ylist, r):
+  carx = xlist[i]
+  cary = ylist[i]
+  for j in range(len(xlist)):
+    if i == j:
+      continue
+    deltaX = carx - xlist[j]
+    deltaY = cary - ylist[j]
+    dist = math.sqrt(deltaX**2 + deltaY**2)
+    if dist <= r:
+      plt.plot([carx, xlist[j]], [cary, ylist[j]] ,'r')
+      xavg = (carx + xlist[j])/2
+      yavg = (cary + ylist[j])/2
+      plt.text(xavg,yavg, r'' + str(round(dist,2)))
+    else:
+      pass
+
+  return
+
+plt.plot(x, y, 'bo')
+plt.grid(b = True)
+plt.xticks(ticks)
+plt.yticks(ticks)
+plt.xlim(0, GRAPHSIZE)
+plt.ylim(0, GRAPHSIZE)
+checkEuc(4, x, y, 6)
+plt.show()
+
 
