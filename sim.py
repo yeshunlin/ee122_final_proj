@@ -52,7 +52,6 @@ class Environment(object):
 
 #########################################################################################
 
-
 class Car(object):
   """web enabled car"""
   def __init__(self, source, destination, label, sg, speed):
@@ -62,22 +61,55 @@ class Car(object):
     # Parent street graph this car cruises on
     self._sg = sg
     self._speed = speed
+    self._next_node_dist_traveled = 0
     self._calculate_route()
 
   def set_speed(self, speed):
     self._speed = speed
 
   def _calculate_route(self):
-    route = self._sg.shortest_path(self.source, self.destination)
-    route.pop(0)
+    route, _ = self._sg.shortest_path(self._source, self._destination)
+    self._last_node = route.pop(0)
     self._route = route
     self._update_next_dest()
 
   def _update_next_dest(self):
-    self._next_dest = self._route.pop(0)
+    if self._route:
+      self._next_node = self._route.pop(0)
+      self._next_node_dist = self._sg.get_edge(self._last_node, self._next_node)
+    else:
+      self._next_node = None
+      self._next_node_dist = 0
+      self._next_node_dist_traveled = 0
 
   def drive(self):
-    
+    if self._next_node:
+      self._next_node_dist_traveled += self._speed
+      while True:
+        if self._next_node_dist_traveled > self._next_node_dist:
+          self._next_node_dist_traveled -= self._next_node_dist
+          self._last_node = self._next_node
+          self._update_next_dest()
+        else:
+          break
+    else:
+      raise Exception("We are done driving")
+
+  def position(self):
+    # Calculates the position as a weighted average of the prev and next nodes
+    if(self._next_node_dist == 0):
+      # We are already there!
+      return self._sg.get_xy_coords(self._destination)
+      
+    x0, y0 = self._sg.get_xy_coords(self._last_node)
+    x1, y1 = self._sg.get_xy_coords(self._next_node)
+    theta = math.atan2(y1-y0,x1-x0)
+    print("Theta is {}".format(theta))
+    x = x0 + self._next_node_dist_traveled * math.cos(theta)
+    y = y0 + self._next_node_dist_traveled * math.sin(theta)
+    return  x, y
+
+
 #########################################################################################
 
 class Node(object):
@@ -103,23 +135,23 @@ class Node(object):
 class EuclideanNode(Node):
   """Node in a graph representing a single street intersection. Calculates Euclidian distance between other's x and y"""
   def __init__(self, *args):
-    super(self).__init__(*args)
+    super(EuclideanNode, self).__init__(*args)
 
-  def add_neighbor(self, other):
+  def add_neighbor(self, other, dist = 1):
     assert isinstance(other, Node)
-    assert other not in self.neighbors
-    self._neighbors[other] = math.sqrt((self.x - other.x)**2 + (self.y - other.y)**2)
+    assert other not in self._neighbors
+    self._neighbors[other] = math.sqrt((self._x - other._x)**2 + (self._y - other._y)**2)
 
 
 class ManhattanNode(Node):
   """Node in a graph representing a single street intersection. Calculates Manhattan distance between other's x and y"""
   def __init__(self, *args):
-    super(self).__init__(*args)
+    super(ManhattanNode, self).__init__(*args)
 
-  def add_neighbor(self, other):
+  def add_neighbor(self, other, dist = 1):
     assert isinstance(other, Node)
-    assert other not in self.neighbors
-    self._neighbors[other] = math.abs(self.x - other.x) + math.abs(self.y - other.y)
+    assert other not in self._neighbors
+    self._neighbors[other] = abs(self._x - other._x) + abs(self._y - other._y)
 
 
 class StreetGraph(object):
@@ -139,13 +171,22 @@ class StreetGraph(object):
     node = self._nodeCls(x, y, label)
     self._nodes.add(node)
 
-  def add_edge(self, label1, label2, distance):
+  def add_edge(self, label1, label2, dist = 1):
     node1 = self._node_from_label(label1)
     node2 = self._node_from_label(label2)
     if not node1 or not node2:
       return
-    node1.add_neighbor(node2)
-    node2.add_neighbor(node1)
+    node1.add_neighbor(node2, dist)
+    node2.add_neighbor(node1, dist)
+
+  def get_edge(self, label1, label2):
+    node1 = self._node_from_label(label1)
+    node2 = self._node_from_label(label2)
+    return node1._neighbors[node2]
+
+  def get_xy_coords(self, label):
+    node = self._node_from_label(label)
+    return node._x, node._y 
 
   def _node_from_label(self, label):
     for n in self._nodes:
@@ -194,11 +235,15 @@ class StreetGraph(object):
 #########################################################################################
 
 
-g = StreetGraph()
+g = StreetGraph(nodeCls = EuclideanNode)
 g.add_node(0, 0, 'A')
 g.add_node(0, 1, 'B')
-g.add_node(1, 1, 'C')
-g.add_edge('A', 'B', 1)
-g.add_edge('B', 'C', 1)
+g.add_node(10, 12, 'C')
+g.add_edge('A', 'B')
+g.add_edge('B', 'C')
 print(g.shortest_path('A', 'C'))
+ferrari = g.add_car('A', 'C', 'One fast car', 3)
 
+while True:
+  print(ferrari.position())
+  ferrari.drive()
