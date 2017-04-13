@@ -6,13 +6,11 @@ import imageio
 
 
 """Vehicle Simulations"""
-#car1 = Car((0,0),(5,5),'car1',g,3)
 
 
 def drawNodes(i, xlist, ylist, r):
   carx = xlist[i]
   cary = ylist[i]
-
   for j in range(len(xlist)):
     if i == j:
       continue
@@ -30,6 +28,7 @@ def drawNodes(i, xlist, ylist, r):
 
 
 def setLinkLife(sGraph):
+	# Sets Link Life of car (edges)
 	assert isinstance(sGraph, StreetGraph)
 	for c in sGraph._cars:
 		c.resetLink()
@@ -39,21 +38,50 @@ def setLinkLife(sGraph):
 			dX = x - xi
 			dY = y - yi
 			dist = math.sqrt(dX**2 + dY**2)
-
 			if (c == ci) | (dist > c.getRad()):
 				continue
 			else:
 				linkVal = detLinkLife(c, ci, sGraph)
 				c.setLinkLife(ci, linkVal)
-				#pritnout = c.getLinkLife(ci)
-				#print(pritnout)
-		return
-	return
+				#printout = c.getLinkLife(ci)
+				#print(printout)
 
+
+def getVel(car, sGraph):
+	x, y = car.position()
+	sp = car.getSpeed()
+	dest_x, dest_y = sGraph.get_xy_coords(car.getNextNode())
+	vx1 = dest_x - x
+	vy1 = dest_y - y
+	vnorm1 = math.sqrt(vx^2 + vy^2)
+	vel_x = vx / vnorm1 * sp
+	vel_y = vy / vnorm1 * sp
+	return vel_x, vel_y
+
+def quadratic(a, b, c):
+  d = (b**2) - (4*a*c)
+  sol1 = (-b-sqrt(d))/(2*a)
+  sol2 = (-b+sqrt(d))/(2*a)
+  return sol1, sol2
 
 def detLinkLife(car1, car2, sGraph):
-	# Joy is implenting this part.
-	return 5
+  a_x, a_y = car1.position()
+  b_x, b_y = car2.position()
+  av_x, av_y = getVel(A, sGraph)
+  bv_x, bv_y = getVel(B, sGraph)
+  a = a_x - b_x
+  b = a_y - b_y
+  c = av_x - bv_x
+  d = av_x - bv_y
+  
+  c_0 = a^2 + b^2 - car1.getRad()^2
+  c_1 = 2*a*c + 2*b*d
+  c_2 = c^2 + d^2
+  
+  try:
+    return max(quadratic(c_2, c_1, c_0))
+  except ZeroDivisionError:
+    return inf
 	#return linkVal
 
 	
@@ -78,7 +106,7 @@ def detLinkLife(car1, car2, sGraph):
 g = StreetGraph()
 g.add_node(3, 0, 'A')
 g.add_node(2, 12, 'B')
-g.add_node(4,7, 'C')
+g.add_node(4, 7, 'C')
 g.add_edge('A', 'B', 10)
 g.add_edge('C', 'B', 10)
 
@@ -92,12 +120,11 @@ g.add_car(honda)
 # f2 = g.add_car('A', 'B', 'blah2', 1)
 
 numIter = 6 #number of driving iterations
-
+GRAPHSIZE = 15
 images = []
 
 for i in range(numIter):
   plt.figure(i)
-  GRAPHSIZE = 15
   ticks = range(0, GRAPHSIZE + 1)
   plt.hold(True)
   plt.grid(b = True)

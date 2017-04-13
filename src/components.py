@@ -15,11 +15,17 @@ class Car(object):
     self._rad = rad
     self._calculate_route()
 
-  def getLinkLife(self, target_car):
-    return self._linkLife[target_car]
+  def getSpeed(self):
+    return self._speed
+
+  def getNextNode(self):
+    return self._next_node
 
   def getRad(self):
     return self._rad
+
+  def getLinkLife(self, target_car):
+    return self._linkLife[target_car]
 
   def setLinkLife(self, target_car, linkVal):
     assert isinstance(target_car, Car)
@@ -195,3 +201,66 @@ class StreetGraph(object):
       bt = prev[bt]
 
     return path, dist[t]
+
+#########################################################################################
+
+class RoutingGraph(Object):
+  """Routing Graph keeps track of the LinkLife/Edges"""
+  def __init__(self, sGraph):
+    assert isinstance(sGraph, StreetGraph)
+    self._nodes = sGraph._cars
+    edges = dict()
+    setEdges(sGraph)
+
+  def setEdges(self):
+    for c in self._nodes:
+      for k, v in c._linkLife:
+        edges[c] = (k, v)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
