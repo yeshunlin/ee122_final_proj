@@ -3,7 +3,7 @@ import math
 
 class Car(object):
   """web enabled car"""
-  def __init__(self, source, destination, label, sg, speed):
+  def __init__(self, source, destination, label, sg, speed, rad = 1):
     self._source = source
     self._destination = destination
     self._label = label
@@ -11,7 +11,28 @@ class Car(object):
     self._sg = sg
     self._speed = speed
     self._next_node_dist_traveled = 0
+    self._linkLife = dict()
+    self._rad = rad
     self._calculate_route()
+
+  def getSpeed(self):
+    return self._speed
+
+  def getNextNode(self):
+    return self._next_node
+
+  def getRad(self):
+    return self._rad
+
+  def getLinkLife(self, target_car):
+    return self._linkLife[target_car]
+
+  def setLinkLife(self, target_car, linkVal):
+    assert isinstance(target_car, Car)
+    self._linkLife[target_car] = linkVal
+
+  def resetLink(self):
+    self._linkLife.clear()
 
   def set_speed(self, speed):
     self._speed = speed
@@ -111,10 +132,15 @@ class StreetGraph(object):
     self._nodeCls = nodeCls
     self._carCls = carCls
 
-  def add_car(self, origin, destination, label, speed = 1):
-    delorian = self._carCls(origin, destination, label, self, speed)
-    self._cars.add(delorian)
-    return delorian
+  # def add_car(self, origin, destination, label, speed = 1):
+  #   delorian = self._carCls(origin, destination, label, self, speed)
+  #   self._cars.add(delorian)
+  #   return delorian
+
+  def add_car(self, vehicle):
+    assert isinstance(vehicle, Car)
+    self._cars.add(vehicle)
+    return
 
   def add_node(self, x, y, label):
     node = self._nodeCls(x, y, label)
@@ -175,3 +201,67 @@ class StreetGraph(object):
       bt = prev[bt]
 
     return path, dist[t]
+
+#########################################################################################
+
+class RoutingGraph(Object):
+  """Routing Graph keeps track of the LinkLife/Edges"""
+  def __init__(self, sGraph):
+    assert isinstance(sGraph, StreetGraph)
+    self._nodes = sGraph._cars
+    edges = dict()
+    setEdges(sGraph)
+
+  def setEdges(self):
+    for c in self._nodes:
+      for k, v in c._linkLife:
+        edges[c] = (k, v)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>>>>>>> yeezy/master
