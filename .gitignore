@@ -87,3 +87,10 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# Images
+*.gif
+*.png
+
+# Thanks Jetbrains
+.idea/
