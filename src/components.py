@@ -101,6 +101,12 @@ class Node(object):
   def neighbors(self):
     return self._neighbors.items()
 
+  def position(self):
+    return self._x, self._y
+
+  def label(self):
+    return self._label
+
 
 class EuclideanNode(Node):
   """Node in a graph representing a single street intersection. Calculates Euclidian distance between other's x and y"""
@@ -145,6 +151,9 @@ class StreetGraph(object):
   def add_node(self, x, y, label):
     node = self._nodeCls(x, y, label)
     self._nodes.add(node)
+
+  def get_nodes(self):
+    return self._nodes
 
   def add_edge(self, label1, label2, dist = 1):
     node1 = self._node_from_label(label1)
@@ -204,7 +213,7 @@ class StreetGraph(object):
 
 #########################################################################################
 
-class RoutingGraph(Object):
+class RoutingGraph(object):
   """Routing Graph keeps track of the LinkLife/Edges"""
   def __init__(self, sGraph):
     assert isinstance(sGraph, StreetGraph)

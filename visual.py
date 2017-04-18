@@ -1,5 +1,5 @@
 from src.discrete import Environment
-from src.components import Car, StreetGraph, EuclideanNode
+from src.components import Car, StreetGraph, EuclideanNode, RoutingGraph
 
 import math
 import matplotlib
@@ -7,10 +7,11 @@ matplotlib.use('TKAgg')
 from matplotlib import pyplot as plt, animation
 import imageio
 import os
-
+import random
 
 """Vehicle Simulations"""
 
+"""
 def drawNodes(i, xlist, ylist, r):
   carx = xlist[i]
   cary = ylist[i]
@@ -24,9 +25,44 @@ def drawNodes(i, xlist, ylist, r):
       plt.plot([carx, xlist[j]], [cary, ylist[j]] ,'r')
       xavg = (carx + xlist[j])/2
       yavg = (cary + ylist[j])/2
-      plt.text(xavg,yavg, r'' + str(round(dist,2)))
+      plt.text(xavg,yavg, str(round(dist,2)))
     else:
       pass
+  return
+  """
+
+def drawNodes(sGraph):
+  xlist = []
+  ylist = []
+  rlist = []
+  for c in sGraph._cars: #takes all car positions into a list
+    x, y = c.position()
+    radius = c.getRad()
+    xlist.append(x)
+    ylist.append(y)
+    rlist.append(radius)
+  if len(xlist) != 0: #if nonempty
+    i = 0
+    carx = xlist[i]
+    cary = ylist[i]
+
+    for i in range(len(xlist)): #we are looking at the i-th car
+      for j in range(len(xlist)): #run through all j to plot relationship with i
+        if i == j: #if equal, don't do anything
+          continue
+        deltaX = carx - xlist[j]
+        deltaY = cary - ylist[j]
+        dist = math.sqrt(deltaX**2 + deltaY**2)
+        if dist <= rlist[i]:
+          plt.plot([carx, xlist[j]], [cary, ylist[j]] ,'r')
+          xavg = (carx + xlist[j])/2
+          yavg = (cary + ylist[j])/2
+          #plt.text(xavg,yavg, str(round(dist,2)))  ##replace as LinkLife 
+          carx = xlist[i]
+          cary = ylist[i]
+        else:
+          pass
+
   return
 
 def setLinkLife(sGraph):
@@ -69,8 +105,8 @@ def quadratic(a, b, c):
 def detLinkLife(car1, car2, sGraph):
   a_x, a_y = car1.position()
   b_x, b_y = car2.position()
-  av_x, av_y = getVel(A, sGraph)
-  bv_x, bv_y = getVel(B, sGraph)
+  av_x, av_y = getVel(car1, sGraph)
+  bv_x, bv_y = getVel(car2, sGraph)
   a = a_x - b_x
   b = a_y - b_y
   c = av_x - bv_x
@@ -88,46 +124,90 @@ def detLinkLife(car1, car2, sGraph):
 
 #Testing Car Unit 
 g = StreetGraph(nodeCls = EuclideanNode)
-g.add_node(1, 1, 'A')
-g.add_node(11, 1, 'B')
-g.add_node(11, 11, 'C')
-g.add_node(1, 11, 'D')
-g.add_edge('A', 'B')
-g.add_edge('C', 'B')
-g.add_edge('D', 'C')
-g.add_edge('A', 'D')
-ferrari = g.add_car('A', 'D', 'One fast car', 0.1)
-f2 = g.add_car('C', 'A', 'blah2', .17)
+#g.add_node(1, 1, 'A')
+#g.add_node(11, 1, 'B')
+#g.add_node(11, 11, 'C')
+#g.add_node(1, 11, 'D')
+#g.add_edge('A', 'B')
+#g.add_edge('C', 'B')
+#g.add_edge('D', 'C')
+#g.add_edge('A', 'D')
+#g.add_car(Car('A', 'D', '1', g, .5, 1000))
+#g.add_car(Car('D', 'B', '2', g, .75, 1000))
+nodes  = []
+num_nodes = 20
 
-numIter = 200 #number of driving iterations
+
+#randomly generate n (= 20) (super connected) nodes in a 20 x 20 graph
+for i in range(0, num_nodes):
+  x_rand = random.randint(0, 20)
+  y_rand = random.randint(0, 20)
+  g.add_node(x_rand, y_rand, str(i))
+  nodes.append(str(i))
+  for j in nodes:
+    if str(j) == str(i):
+      break
+    g.add_edge(str(i), str(j))
+
+#randomly generate 10 cars with variable speeds 0 < s < 1 and super connected links
+"""for i in range(0, 10):
+  rand_sta = random.randint(0, num_nodes - 1)
+  rand_end = random.randint(0, num_nodes - 1)
+  rand_spe = random.random()
+  #rand_spe = random.randrange(0, 1, 1000)
+  g.add_car(Car(str(rand_sta), str(rand_end), str(i), g, rand_spe, 1000))"""
+
+#randomly generate 10 cars with variable speeds 0 < s < 1 and selectively connected links
+#links are connected to the n + 1 & n + 2, & also all links within nodal radius nr
+
+
+
+numIter = 50 #number of driving iterations
 
 images = []
-with imageio.get_writer("movie.gif", 'GIF', mode='I', duration=.1,) as writer:
-  GRAPHSIZE = 15
-  ticks = range(0, GRAPHSIZE + 1)
+with imageio.get_writer("movie.gif", 'GIF', mode='I', duration=.3,) as writer:
   plt.hold(True)
-  plt.grid(b = True)
-  plt.xticks(ticks)
-  plt.yticks(ticks)
-  plt.xlim(0, GRAPHSIZE)
-  plt.ylim(0, GRAPHSIZE)
 
   for i in range(numIter):
     print("Generating frame {}".format(i))
-    
+    node_x = []
+    node_y = []
+    node_label = []
+    for n in g.get_nodes():
+      x, y = n.position()
+      node_x.append(x)
+      node_y.append(y)
+      node_label.append(n.label())
+      plt.plot(node_x, node_y, 'go')
+
+    for i in range(len(node_label)):
+      plt.text(node_x[i], node_y[i], node_label[i]) 
+
+    g_size = max(max(node_x) + 1, max(node_y) + 1)
+    ticks = range(0, g_size + 1)
+    plt.grid(b = True)
+    plt.xticks(ticks)
+    plt.yticks(ticks)
+    plt.xlim(0, g_size)
+    plt.ylim(0, g_size)
+
     xlist = []
     ylist = []
 
+    drawNodes(g)
+
     for c in g._cars:
-        x, y = c.position()
-        xlist.append(x)
-        ylist.append(y)
-        plt.plot(x, y, 'bo')
-        drawNodes(0, xlist,ylist, 3)
-        try:
-          c.drive()
-        except:
-          pass
+      x, y = c.position()
+      xlist.append(x)
+      ylist.append(y)
+      plt.plot(x, y, 'bo')
+      #drawNodes(0, xlist,ylist, 3)
+      try:
+        c.drive()
+      except:
+        pass
+    
+
 
     filename = 'fig' + str(i) + '.png'
     plt.savefig(filename)
