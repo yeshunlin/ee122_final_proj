@@ -95,7 +95,9 @@ class Node(object):
 
   def add_neighbor(self, other, dist = 1):
     assert isinstance(other, Node)
-    assert other not in self._neighbors
+    #assert other not in self._neighbors
+    if other in self._neighbors:
+      return
     self._neighbors[other] = dist
 
   def neighbors(self):
@@ -115,7 +117,9 @@ class EuclideanNode(Node):
 
   def add_neighbor(self, other, dist = 1):
     assert isinstance(other, Node)
-    assert other not in self._neighbors
+    #assert other not in self._neighbors
+    if other in self._neighbors:
+      return
     self._neighbors[other] = math.sqrt((self._x - other._x)**2 + (self._y - other._y)**2)
 
 
@@ -126,7 +130,9 @@ class ManhattanNode(Node):
 
   def add_neighbor(self, other, dist = 1):
     assert isinstance(other, Node)
-    assert other not in self._neighbors
+    #assert other not in self._neighbors
+    if other in self._neighbors:
+      return
     self._neighbors[other] = abs(self._x - other._x) + abs(self._y - other._y)
 
 
